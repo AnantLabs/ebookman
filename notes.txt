@@ -1,0 +1,17 @@
+http://code.google.com/p/ebookman/
+
+formats to be supported:
+- text
+- html
+- fb2
+- pdf
+- rar (audio) ?
+
+data providers to be supported
+- amazon.com
+- lib.aldebaran.ru
+- isbndb.com
+- librarything.com
+- lib.ru
+- ozon.ru
+- fictionbook.ru
