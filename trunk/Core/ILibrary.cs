@@ -1,20 +1,23 @@
 using System;
 using System.Drawing;
+using System.Collections.Generic;
 
 namespace EBookMan
 {
-    public delegate void HandleBookDelegate (Book book);
-
-    public interface ILibrary
+    public interface ILibrary : IEnumerable<Book> 
     {
-        bool Find(FilterCriteria criteria, HandleBookDelegate handleBookDelegate);
-
         void Add(Book book, IAsyncProcessHost progress);    // progress percent 50%-100%
 
-        bool Delete(Book book);
+        Filter Filter
+        {
+            get;
+            set;
+        }
 
-        string[] GetLanguages();
+        List<string> GetLanguages();
 
-        string[] GetTags();
+        List<string> GetAvailableTags();
+
+        event EventHandler FilterChanged;
     }
 }

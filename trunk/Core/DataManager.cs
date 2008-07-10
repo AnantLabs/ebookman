@@ -137,13 +137,25 @@ namespace EBookMan
 
             set
             {
+                EventHandler filterChanged = new EventHandler(OnFilterChange);
+
+                if ( this.currLibrary != null )
+                    this.currLibrary.FilterChanged -= filterChanged;
+
                 this.currLibrary = value;
+
+                if ( this.currLibrary != null )
+                    this.currLibrary.FilterChanged += filterChanged;
+
                 FireLibraryChange();
             }
         }
 
 
         public event EventHandler ActiveLibraryChange;
+
+
+        public event EventHandler DataChange;
 
 
         /// <summary>
@@ -231,6 +243,19 @@ namespace EBookMan
             EventHandler handler = this.ActiveLibraryChange;
             if ( handler != null )
                 handler(this, EventArgs.Empty);
+
+            handler = this.DataChange;
+            if ( handler != null ) handler(this, EventArgs.Empty);
+        }
+
+
+        private void OnFilterChange (object sender, EventArgs args)
+        {
+            if (sender == this.currLibrary)
+            {
+                EventHandler handler = this.DataChange;
+                if ( handler != null ) handler(this, EventArgs.Empty);
+            }
         }
 
 

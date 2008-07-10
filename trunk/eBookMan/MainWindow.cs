@@ -15,25 +15,22 @@ namespace EBookMan
             InitializeComponent();
 
             DataManager.Instance.MainWindow = this;
-            DataManager.Instance.ActiveLibraryChange += new EventHandler(this.OnActiveLibraryChange);
-
+            DataManager.Instance.DataChange += new EventHandler(OnDataChange);
             if ( DataManager.Instance.ActiveLibrary != null )
-                OnActiveLibraryChange(this, EventArgs.Empty);
+                OnDataChange(this, EventArgs.Empty);
         }
 
         #region system event handlers
 
-        private void OnActiveLibraryChange(object sender, EventArgs e)
+        private void OnDataChange(object sender, EventArgs e)
         {
-            if ( this.InvokeRequired )
-            {
-                this.BeginInvoke(new EventHandler(OnActiveLibraryChange));
-                return;
-            }
+            //if ( this.InvokeRequired )
+            //{
+            //    this.BeginInvoke(new EventHandler(OnActiveLibraryChange));
+            //    return;
+            //}
 
-            this.filterPanel.UpdateContent();
-
-            // TODO: implement
+            //// TODO: implement
         }
 
         #endregion
@@ -114,12 +111,17 @@ namespace EBookMan
             // the form is not shown
 
             ProgressForm.Show(Properties.Resources.TitleAddingFiles, process as IAsyncProcess);
+
+
+            // update filter with new languages and tags
+
+            this.filterPanel.UpdateUI();
         }
 
 
         private void OnAddFolder(object sender, EventArgs e)
         {
-            
+            // TODO: implement
         }
 
         #endregion
