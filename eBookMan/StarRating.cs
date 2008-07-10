@@ -95,6 +95,9 @@ namespace EBookMan
                 this.Invalidate();
             }
         }
+
+        public event EventHandler StarsChanged;
+
         #endregion
 
         #region variables
@@ -169,6 +172,9 @@ namespace EBookMan
                     stars = maxStars;
                 }
                 this.Invalidate();
+
+                EventHandler h = this.StarsChanged;
+                if ( h != null ) h(this, EventArgs.Empty);
             }
         }
         #endregion

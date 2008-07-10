@@ -1,4 +1,5 @@
-http://code.google.com/p/ebookman/
+google code: http://code.google.com/p/ebookman/
+blog: http://maxvolkin.wordpress.com
 
 formats to be supported:
 - text

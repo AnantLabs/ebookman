@@ -16,48 +16,11 @@ namespace EBookMan
         {
             InitializeComponent();
 
-
-            // generate list of formats
-
-            List<IBookFormat> formats = DataManager.Instance.Formats;
-            int x = this.chkSeries.Left;
-            int y = this.chkFrmtNone.Top;
-
-            this.SuspendLayout();
-
-            EventHandler checkHandler = new EventHandler(OnCriteriaChanged);
-
-            foreach ( IBookFormat format in formats )
-            {
-                CheckBox chkFmt = new CheckBox();
-                chkFmt.AutoSize = true;
-                chkFmt.Location = new System.Drawing.Point(x, y);
-                chkFmt.Size = new System.Drawing.Size(64, 17);
-                chkFmt.Text = format.Name;
-                chkFmt.UseVisualStyleBackColor = true;
-                chkFmt.Tag = format.Guid;
-                chkFmt.CheckedChanged += checkHandler;
-                this.Controls.Add(chkFmt);
-
-                if (x == this.chkSeries.Left)
-                {
-                    y += 22;
-                    x = this.chkFrmtNone.Left;
-
-                    this.groupFormat.Height += 22;
-                    this.groupTags.Height -= 22;
-                    this.groupTags.Top += 22;
-                }
-                else
-                {
-                    x = this.chkSeries.Left;
-                }
-            }
-
-            this.ResumeLayout();
+            this.rating.StarsChanged += new EventHandler(OnStarsChanged);
 
 
-            // add timer
+            // create timer used to delay
+            // reaction to user changes
 
             this.waitCounter = 0;
 
@@ -65,37 +28,53 @@ namespace EBookMan
             this.timer.Interval = 200;
             this.timer.Tick += new EventHandler(OnTimerTick);
 
+
+            // subscribe to the library change event
+            // when the library is changed - load
+            // the last used filter
+
+            DataManager.Instance.ActiveLibraryChange += new EventHandler(OnActiveLibraryChanged);
+            OnActiveLibraryChanged(this, EventArgs.Empty);
         }
 
         #endregion
 
         #region public methods
 
-        public void UpdateContent()
+        public void UpdateUI()
         {
             ILibrary lib = DataManager.Instance.ActiveLibrary;
 
+            this.SuspendLayout();
 
-            // update languages
 
+            // update language drop down
+
+            this.cmbLanguage.BeginUpdate();
             this.cmbLanguage.Items.Clear();
-            string[] langs = (lib != null) ? lib.GetLanguages() : null;
 
-            if (langs != null)
+            List<string> langs = ( lib != null ) ? lib.GetLanguages() : null;
+
+            if ( langs != null )
             {
-                foreach (string lang in langs)
+                foreach ( string lang in langs )
                     this.cmbLanguage.Items.Add(lang);
             }
-                
-            this.cmbLanguage.Enabled = ( langs != null && langs.Length > 0 );
 
-            
+            this.cmbLanguage.Enabled = ( langs != null && langs.Count > 0 );
+
+
+            this.cmbLanguage.ResumeLayout();
+
+            this.listTags.Items.Clear();
+
+
             // update list of tags
 
             this.listTags.BeginUpdate();
             this.listTags.Items.Clear();
 
-            string[] tags = ( lib != null ) ? lib.GetTags() : null;
+            List<string> tags = ( lib != null ) ? lib.GetAvailableTags() : null;
 
             if ( tags != null )
             {
@@ -103,34 +82,27 @@ namespace EBookMan
                     this.listTags.Items.Add(tag);
             }
 
-            this.listTags.Enabled = (tags != null && tags.Length > 0);
+            this.listTags.Enabled = ( tags != null && tags.Count > 0 );
             this.listTags.EndUpdate();
 
 
-            // reset filter criteria 
-            // and update UI
+            // update control values
 
-            if ( !this.filters.ContainsKey(lib) )
-                this.filters.Add(lib, new FilterCriteria());
+            if ( lib != null && lib.Filter != null )
+                UpdateUiFromFilter(lib.Filter);
 
-            SetFilterToUI(this.filters[lib]);
+            this.ResumeLayout();
         }
-
-
-        public FilterCriteria Filter
-        {
-            get 
-            { 
-                return (DataManager.Instance.ActiveLibrary == null) ? null : this.filters[DataManager.Instance.ActiveLibrary]; 
-            }
-        }
-
-
-        public event EventHandler FilterChanged;
 
         #endregion
 
-        #region UI event handlers
+        #region Event handlers
+
+        private void OnActiveLibraryChanged(object sender, EventArgs e)
+        {
+            Update();
+        }
+
 
         private void OnCriteriaChanged(object sender, EventArgs e)
         {
@@ -148,16 +120,11 @@ namespace EBookMan
         
         private void OnReset(object sender, EventArgs e)
         {
-            if (DataManager.Instance.ActiveLibrary == null)
-                return;
-
-            FilterCriteria filter = this.filters[DataManager.Instance.ActiveLibrary];
-            if ( filter.IsDefault(DataManager.Instance.ActiveLibrary) )
-                return;
-
-            filter.Reset(DataManager.Instance.ActiveLibrary);
-            SetFilterToUI(filter);
-            FireFilterChanged();
+            if ( DataManager.Instance.ActiveLibrary != null )
+            {
+                DataManager.Instance.ActiveLibrary.Filter = null;
+                UpdateUiFromFilter(null);
+            }
         }
 
 
@@ -168,8 +135,8 @@ namespace EBookMan
                 this.timer.Stop();
                 if (DataManager.Instance.ActiveLibrary != null)
                 {
-                    if (SetUIToFilter())
-                        FireFilterChanged();
+                    DataManager.Instance.ActiveLibrary.Filter = GetFilterFromUi();
+                    return;
                 }
             }
 
@@ -177,100 +144,180 @@ namespace EBookMan
         }
 
 
+        private void OnStarsChanged(object sender, EventArgs e)
+        {
+            this.chkRating.Text = string.Format(Properties.Resources.RatingTextNumbered, this.rating.Stars);
+        }
+
+
+        private void OnRatingCheckChanged(object sender, EventArgs e)
+        {
+            this.rating.Enabled = this.chkRating.Checked;
+            this.chkIncludeHigher.Enabled = this.chkIncludeHigher.Checked;
+
+            this.chkRating.Text = Properties.Resources.RatingTextEmpty;
+        }
+        
         #endregion
 
         #region helpers
 
-        private void FireFilterChanged ()
+        private Filter GetFilterFromUi()
         {
-            EventHandler h = FilterChanged;
-            if (h != null) h(this, EventArgs.Empty);
-        }
+            Filter filter = new Filter();
 
 
-        private void SetFilterToUI(FilterCriteria filter)
-        {
-            // text search
+            // search text
 
-            this.txtSearch.Text = filter.Text;
-            this.chkAuthor.Checked = ( ( filter.TextSearchLocation & TextSearchLocation.Authors ) == TextSearchLocation.Authors );
-            this.chkTitle.Checked = ( ( filter.TextSearchLocation & TextSearchLocation.Title) == TextSearchLocation.Title);
-            this.chkSeries.Checked = ( ( filter.TextSearchLocation & TextSearchLocation.Series) == TextSearchLocation.Series);
-            this.chkAnnotation.Checked = ( ( filter.TextSearchLocation & TextSearchLocation.Annotation ) == TextSearchLocation.Annotation );
-
-
-            // TODO: rating
-
-
-            // language
-
-            this.cmbLanguage.Text = filter.Language;
-
-
-            // formats
-
-            foreach (Control control in this.groupFormat.Controls)
+            if ( !string.IsNullOrEmpty(this.txtSearch.Text) )
             {
-                CheckBox chk = control as CheckBox;
-                if (chk != null)
-                {
-                    if (chk.Tag == null)
-                    {
-                        // no files
-                        chk.Checked = filter.NoFiles;
-                    }
-                    else
-                    {
-                        // different formats
-                       
-                        bool found = false;
+                if ( this.chkAuthor.Checked )
+                    filter.Add(Filter.Author, this.txtSearch.Text, FilterOperation.Contains);
 
-                        if (filter.Formats != null)
-                        {
-                            foreach (IBookFormat format in filter.Formats)
-                                if (format.Guid.Equals((Guid)chk.Tag))
-                                {
-                                    found = true;
-                                    break;
-                                }
-                        }
+                if ( this.chkTitle.Checked )
+                    filter.Add(Filter.Title, this.txtSearch.Text, FilterOperation.Contains);
 
-                        chk.Checked = found;
-                    }
-                }
+                if ( this.chkSeries.Checked )
+                    filter.Add(Filter.Series, this.txtSearch.Text, FilterOperation.Contains);
+
+                if ( this.chkAnnotation.Checked )
+                    filter.Add(Filter.Annotation, this.txtSearch.Text, FilterOperation.Contains);
             }
+
+
+            // rating
+
+            if ( this.chkRating.Checked )
+                filter.Add(Filter.Rating, this.rating.Stars,
+                    ( this.chkIncludeHigher.Checked ) ? FilterOperation.GreaterOrEqual : FilterOperation.Equal);
+
+
+            // languange
+
+            if ( !string.IsNullOrEmpty(this.cmbLanguage.Text) )
+                filter.Add(Filter.Language, this.cmbLanguage.Text, FilterOperation.Equal);
 
 
             // tags
 
-            this.listTags.BeginUpdate();
-
-            for (int i=0; i<this.listTags.Items.Count; i++)
-                this.listTags.SetItemChecked(i, false);
-
-            if (filter.Tags != null && filter.Tags.Length > 0)
+            if ( this.listTags.CheckedIndices.Count < this.listTags.Items.Count )
             {
-                foreach (string tag in filter.Tags)
-                {
-                    int index  = this.listTags.FindStringExact(tag);
-                    if (index != -1)
-                        this.listTags.SetItemChecked(index, true);
-                }
+                List<string> tags = new List<string>(this.listTags.Items.Count);
+
+                for ( int i = 0 ; i < this.listTags.Items.Count ; i++ )
+                    if ( this.listTags.GetItemChecked(i) )
+                        tags.Add(this.listTags.Items[ i ].ToString());
+
+                filter.Add(Filter.Tags, tags.ToArray(), FilterOperation.Contains);
             }
 
+
+            return filter.IsEmpty ? null : filter;
         }
 
 
-        private bool SetUIToFilter()
+        private void UpdateUiFromFilter(Filter filter)
         {
-            throw new NotImplementedException();
+            object value;
+            FilterOperation op;
+
+
+            // update text and text checkboxes
+
+            string text = null;
+            string[] fields = new string[]{Filter.Author, Filter.Title, Filter.Series, Filter.Annotation};
+            CheckBox[] chkBoxes = new CheckBox[]{this.chkAuthor, this.chkTitle, this.chkSeries, this.chkAnnotation};
+
+            for (int i=0; i<fields.Length; i++)
+            {
+                if (filter.Get(fields[i], out value, out op) && 
+                    (op == FilterOperation.Contains || op == FilterOperation.Equal) &&
+                    (value.ToString().Length > 0))
+                {
+                    string val = value.ToString();
+                    if (text == null)
+                    {
+                        text = val;
+                        chkBoxes[i].Checked = true;
+                    }
+                    else 
+                        chkBoxes[i].Checked = (string.Compare(text, val, true) == 0);
+                }
+                else
+                {
+                    chkBoxes[i].Checked = false;
+                }
+            }
+
+            this.txtSearch.Text = text;
+                    
+
+            // update rating
+
+            if (filter.Get(Filter.Rating, out value, out op) && 
+                (op == FilterOperation.GreaterOrEqual || op == FilterOperation.Equal))
+            {
+                this.chkRating.Checked = true;
+                this.rating.Stars = (byte)value;
+                this.chkIncludeHigher.Checked = (op == FilterOperation.GreaterOrEqual);
+                OnStarsChanged(this, EventArgs.Empty);
+            }
+            else
+            {
+                this.chkRating.Checked = false;
+            }
+
+
+            // update language
+
+            if ( filter.Get(Filter.Language, out value, out op) &&
+                ( op == FilterOperation.Contains || op == FilterOperation.Equal ) )
+            {
+                this.cmbLanguage.Text = value.ToString();
+            }
+            else
+            {
+                this.cmbLanguage.Text = "";
+            }
+
+
+            // update tags
+
+            if (this.listTags.Items.Count > 0)
+            {
+                string[] tags = (filter.Get(Filter.Tags, out value, out op) && op == FilterOperation.Contains) 
+                    ? (string[])value 
+                    : null;
+
+                for (int i=0; i<this.listTags.Items.Count; i++)
+                {
+                    if (tags == null)
+                    {
+                        this.listTags.SetItemChecked(i, true);
+                    }
+                    else
+                    {
+                        bool found = false;
+
+                        foreach (string filterTag in tags)
+                        {
+                            if (string.Compare(this.listTags.Items[i].ToString(), filterTag, true) == 0)
+                            {
+                                found = true;
+                                break;
+                            }
+                        }
+
+                        this.listTags.SetItemChecked(i, found);
+                    }
+                }
+            }
         }
 
         #endregion
 
         #region private members
 
-        private Dictionary<ILibrary, FilterCriteria> filters = new Dictionary<ILibrary, FilterCriteria>();
         private Timer timer;
         private int waitCounter;
 

@@ -38,23 +38,12 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DataProviders\Aldebaran.cs" />
-    <Compile Include="DataProviders\Amazon.cs" />
-    <Compile Include="DataProviders\FictionBook.cs" />
-    <Compile Include="DataProviders\Isbndb.cs" />
-    <Compile Include="DataProviders\LibraryThings.cs" />
-    <Compile Include="DataProviders\LibRu.cs" />
     <Compile Include="DataProviders\Local.cs" />
-    <Compile Include="DataProviders\Ozon.cs" />
-    <Compile Include="Formats\Audio.cs" />
     <Compile Include="Formats\Fb2Format.cs" />
-    <Compile Include="Formats\Html.cs" />
-    <Compile Include="Formats\Pdf.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\Common\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>
     </Compile>
-    <Compile Include="Formats\Text.cs" />
     <Compile Include="Properties\Resource.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

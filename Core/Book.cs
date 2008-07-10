@@ -56,6 +56,7 @@ namespace EBookMan
         public byte Rating
         {
             get { return this.rating; }
+            set { this.rating = value; }
         }
 
 

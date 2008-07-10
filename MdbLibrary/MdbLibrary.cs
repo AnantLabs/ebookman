@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Collections;
 using System.Drawing;
 using System.Data.OleDb;
 using System.Windows.Forms;
@@ -70,6 +71,22 @@ namespace EBookMan
         {
             throw new Exception("The method or operation is not implemented.");
         }
+
+        #endregion
+
+        #region IEnumeratable
+
+        public IEnumerator<Book> GetEnumerator()
+        {
+            throw new NotImplementedException();
+        }
+
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator(); 
+        }
+
 
         #endregion
 
@@ -156,6 +173,9 @@ namespace EBookMan
         private OleDbConnection connection;
         private ToolStripButton button;
         private Dictionary<string, object> compressable = new Dictionary<string, object>();
+
+        private List<string> languanges;
+        private List<string> tags;
 
         #endregion
     }

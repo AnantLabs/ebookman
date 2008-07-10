@@ -4,6 +4,7 @@ using System.Xml;
 using System.Data.OleDb;
 using System.Text;
 using System.IO;
+using System.Collections.Generic;
 using ICSharpCode.SharpZipLib.Zip;
 
 namespace EBookMan
@@ -12,44 +13,45 @@ namespace EBookMan
     {
         #region ILibrary Members
 
-        public bool Find(FilterCriteria criteria, HandleBookDelegate handleBookDelegate)
-        {
-            StringBuilder query = new StringBuilder("SELECT * FROM Books");
-            if ( criteria != null )
-            {
-                query.Append(" WHERE ");
+        // TODO: remove?
+        //public bool Find(FieldFilter criteria, HandleBookDelegate handleBookDelegate)
+        //{
+        //    StringBuilder query = new StringBuilder("SELECT * FROM Books");
+        //    if ( criteria != null )
+        //    {
+        //        query.Append(" WHERE ");
 
-                if ( !string.IsNullOrEmpty(criteria.Text) )
-                {
-                    if ( ( criteria.TextSearchLocation & TextSearchLocation.Authors ) == TextSearchLocation.Authors )
-                        query.Append(string.Format(" (Authors CONTAINS {0})", criteria.Text));
-                }
-            }
+        //        if ( !string.IsNullOrEmpty(criteria.Text) )
+        //        {
+        //            if ( ( criteria.TextSearchLocation & TextSearchLocation.Authors ) == TextSearchLocation.Authors )
+        //                query.Append(string.Format(" (Authors CONTAINS {0})", criteria.Text));
+        //        }
+        //    }
 
-            try
-            {
-                OleDbCommand command = new OleDbCommand(query.ToString(), this.connection);
-                OleDbDataReader reader = command.ExecuteReader();
+        //    try
+        //    {
+        //        OleDbCommand command = new OleDbCommand(query.ToString(), this.connection);
+        //        OleDbDataReader reader = command.ExecuteReader();
 
-                if ( !reader.HasRows )
-                    return false;
+        //        if ( !reader.HasRows )
+        //            return false;
 
-                while ( reader.Read() )
-                {
-                    System.Diagnostics.Debug.WriteLine(reader[ "Title" ]);
-                    System.Diagnostics.Debug.WriteLine(reader[ "Authors" ]);
-                    System.Diagnostics.Debug.WriteLine(reader[ "Series" ]);
-                }
+        //        while ( reader.Read() )
+        //        {
+        //            System.Diagnostics.Debug.WriteLine(reader[ "Title" ]);
+        //            System.Diagnostics.Debug.WriteLine(reader[ "Authors" ]);
+        //            System.Diagnostics.Debug.WriteLine(reader[ "Series" ]);
+        //        }
 
-                reader.Close();
-                return true;
-            }
+        //        reader.Close();
+        //        return true;
+        //    }
 
-            catch ( OleDbException )
-            {
-                return false;
-            }
-        }
+        //    catch ( OleDbException )
+        //    {
+        //        return false;
+        //    }
+        //}
 
 
         public void Add(Book book, IAsyncProcessHost progress)
@@ -127,7 +129,13 @@ namespace EBookMan
             }
 
 
-            // add files to the databasse
+            // force update available language list and tag list
+
+            this.tags = null;
+            this.languanges = null;
+
+
+            // add files to the database
 
             bool compress = Properties.Settings.Default.CompressFiles;
 
@@ -185,21 +193,36 @@ namespace EBookMan
         }
 
 
-        public bool Delete(Book book)
+        public Filter Filter
         {
-            throw new Exception("The method or operation is not implemented.");
+            get { throw new NotImplementedException(); }
+            set
+            {
+                EventHandler h = this.FilterChanged;
+                if ( h != null ) h(this, EventArgs.Empty);
+                throw new NotImplementedException();
+            }
         }
 
 
-        public string[] GetLanguages()
+        public event EventHandler FilterChanged;
+
+
+        public List<string> GetLanguages()
         {
-            throw new NotImplementedException();
+            if ( this.languanges == null )
+                this.languanges = GetStrings("SELECT DISTINCT BookLanguage FROM Books ORDER BY BookLanguage");
+
+            return this.languanges;
         }
 
 
-        public string[] GetTags()
+        public List<string> GetAvailableTags()
         {
-            throw new NotImplementedException();
+            if ( this.tags == null )
+                this.tags = GetStrings("SELECT Name FROM Tags ORDER BY Name");
+
+            return this.tags;
         }
 
         #endregion
@@ -327,10 +350,12 @@ namespace EBookMan
 
         private Int32 GetRecordID(string format, params object[] args)
         {
+            OleDbDataReader reader = null;
+
             try
             {
                 OleDbCommand command = new OleDbCommand(string.Format(format, args), this.connection);
-                OleDbDataReader reader = command.ExecuteReader();
+                reader = command.ExecuteReader();
 
                 if ( !reader.HasRows )
                     return -1;
@@ -347,6 +372,56 @@ namespace EBookMan
             catch ( OleDbException )
             {
                 return -1;
+            }
+
+            finally
+            {
+                if ( reader != null )
+                {
+                    reader.Close();
+                    reader.Dispose();
+                }
+            }
+        }
+
+
+        private List<string> GetStrings(string format, params object[] args)
+        {
+            OleDbDataReader reader = null;
+
+            try
+            {
+                OleDbCommand command = new OleDbCommand(string.Format(format, args), this.connection);
+                reader = command.ExecuteReader();
+
+                if ( !reader.HasRows )
+                    return null;
+
+                List<string> list = new List<string>();
+
+                while (reader.Read())
+                    list.Add(reader.GetString(0));
+
+                return list;
+            }
+
+            catch ( InvalidOperationException )
+            {
+                return null;
+            }
+
+            catch ( OleDbException )
+            {
+                return null;
+            }
+
+            finally
+            {
+                if ( reader != null )
+                {
+                    reader.Close();
+                    reader.Dispose();
+                }
             }
         }
 

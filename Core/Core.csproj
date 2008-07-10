@@ -40,12 +40,13 @@
     <Compile Include="AsyncProcess\IAsyncProcessHost.cs" />
     <Compile Include="Book.cs" />
     <Compile Include="BookFile.cs" />
-    <Compile Include="FilterCriteria.cs" />
+    <Compile Include="Filter.cs" />
     <Compile Include="IBookFormat.cs" />
     <Compile Include="IPlugin.cs" />
     <Compile Include="ILibrary.cs" />
     <Compile Include="IDataProvider.cs" />
     <Compile Include="DataManager.cs" />
+    <Compile Include="IViewer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="..\Common\CommonAssemblyInfo.cs">
       <Link>Properties\CommonAssemblyInfo.cs</Link>

@@ -114,6 +114,24 @@ namespace EBookMan.Properties {
             }
         }
         
+        /// <summary>
+        ///   Looks up a localized string similar to Only Rated.
+        /// </summary>
+        internal static string RatingTextEmpty {
+            get {
+                return ResourceManager.GetString("RatingTextEmpty", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to Only Rated ({0} stars).
+        /// </summary>
+        internal static string RatingTextNumbered {
+            get {
+                return ResourceManager.GetString("RatingTextNumbered", resourceCulture);
+            }
+        }
+        
         internal static System.Drawing.Bitmap sternhalb {
             get {
                 object obj = ResourceManager.GetObject("sternhalb", resourceCulture);
