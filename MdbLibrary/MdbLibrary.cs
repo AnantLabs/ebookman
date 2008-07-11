@@ -28,22 +28,25 @@ namespace EBookMan
             
             // if file does not exist there - copy the one supplied
 
-            if ( !File.Exists(string.Format("{0}books.mdb", path)) )
+            string dest = string.Format("{0}books.mdb", path);
+
+            if ( !File.Exists(dest) )
             {
                 if ( !Directory.Exists(path) )
                     Directory.CreateDirectory(path);
 
-                File.Copy(DataManager.Instance.AppFolder + "books.mdb", path);
+                string source = string.Format("{0}books.mdb", IOHelper.CompletePath(Application.StartupPath));
+                File.Copy(source, dest);
 
-                Logger.Warning("MDBLibrary: MDB file was not fount at {0}. Copying default.", path);
+                Logger.Warning("MDBLibrary: MDB file was not fount {0}. Copying default.", dest);
             }
 
 
             // connect to the database
 
             string connString = string.Format(
-                "Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0}books.mdb;Jet OLEDB:Database Password=BookMan",
-                path);
+                "Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0};Jet OLEDB:Database Password=BookMan",
+                dest);
 
             this.connection = new OleDbConnection(connString);
             this.connection.Open();
@@ -94,6 +97,7 @@ namespace EBookMan
             this.button.Alignment = ToolStripItemAlignment.Right;
             this.button.Size = new Size(60, 49);
             this.button.ToolTipText = Properties.Resources.MdbTooltip;
+            this.button.Checked = true;
 
             toolstrip.Items.Add(this.button);
         }

@@ -118,8 +118,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <Content Include="Resources\add.png" />
+    <Content Include="Resources\copy.png" />
+    <Content Include="Resources\delete.png" />
+    <Content Include="Resources\edit.png" />
+    <Content Include="Resources\options.png" />
+    <Content Include="Resources\read.png" />
     <Content Include="Resources\sternhalb.gif" />
     <Content Include="Resources\sternvoll.gif" />
+    <Content Include="Resources\view.png" />
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

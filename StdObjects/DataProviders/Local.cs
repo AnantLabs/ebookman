@@ -46,9 +46,10 @@ namespace EBookMan
         }
 
 
-        public bool CreateBook (string url, out Book book, IAsyncProcessHost progress)
+        public bool CreateBook (string url, out Book book, out BookFile file, IAsyncProcessHost progress)
         {
             book = null;
+            file = null;
 
             IBookFormat format = DataManager.Instance.GetFormatByPath(url);
             if ( format == null )
@@ -56,6 +57,8 @@ namespace EBookMan
 
             if ( ! format.GetMetaData(url, out book, progress) )
                 return false; // could not get enough metadata;
+
+            file = new BookFile(url, format.Guid);
 
             return true;
         }

@@ -74,8 +74,8 @@ namespace EBookMan.Properties {
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
-        [global::System.Configuration.DefaultSettingValueAttribute("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=|DataDirectory|\\Resources\\books.mdb;" +
-            "Persist Security Info=True;Jet OLEDB:Database Password=BookMan")]
+        [global::System.Configuration.DefaultSettingValueAttribute("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=|DataDirectory|\\books.mdb;Persist Se" +
+            "curity Info=True;Jet OLEDB:Database Password=BookMan")]
         public string booksConnectionString {
             get {
                 return ((string)(this["booksConnectionString"]));

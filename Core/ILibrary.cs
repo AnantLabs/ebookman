@@ -11,7 +11,9 @@ namespace EBookMan
             get;
         }
 
-        void Add(Book book, IAsyncProcessHost progress);
+        bool AddBook(Book book, IAsyncProcessHost progress);
+
+        bool AddFiles(Book book, BookFile[] files, IAsyncProcessHost progress);
 
         List<string> GetLanguages();
 

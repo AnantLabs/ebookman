@@ -8,12 +8,6 @@ namespace EBookMan
         {
             this.path = path;
             this.formatId = formatGuid;
-            this.bookId = -1;
-        }
-
-        public BookFile(string path, Guid formatGuid, DateTime date) : this(path, formatGuid)
-        {
-            this.date = date;
         }
 
         public string Path
@@ -27,15 +21,7 @@ namespace EBookMan
             get { return this.formatId; }
         }
 
-        public Int32 BookId
-        {
-            get { return this.bookId; }
-            set { this.bookId = value; }
-        }
-
         private string path;
         private Guid formatId;
-        private Int32 bookId;
-        private DateTime date;
     }
 }

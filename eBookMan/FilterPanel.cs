@@ -27,12 +27,6 @@ namespace EBookMan
             this.timer = new Timer();
             this.timer.Interval = 200;
             this.timer.Tick += new EventHandler(OnTimerTick);
-
-
-            // prepare empty filters for all libraries
-
-            foreach ( ILibrary lib in DataManager.Instance.Libraries )
-                this.filters.Add(lib, null);
         }
 
 
@@ -46,6 +40,13 @@ namespace EBookMan
             // the last used filter
 
             DataManager.Instance.ActiveLibraryChange += new EventHandler(OnActiveLibraryChanged);
+
+
+            // prepare empty filters for all libraries
+
+            foreach ( ILibrary lib in DataManager.Instance.Libraries )
+                this.filters.Add(lib, null);
+
             base.OnLoad(e);
         }
 

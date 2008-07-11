@@ -122,14 +122,14 @@ namespace EBookMan
 
             if ( ! string.IsNullOrEmpty(this.txtErrors.Text) )
             {
-                this.lblStep.Text = Properties.Resources.ErrorsFound;
-                this.lblStep.ForeColor = Color.Maroon;
+                this.lblProgress.Text = Properties.Resources.ErrorsFound;
+                this.lblProgress.ForeColor = Color.Maroon;
             }
             else
             {
                 if ( !string.IsNullOrEmpty(prompt) )
                 {
-                    this.lblStep.Text = prompt;
+                    this.lblProgress.Text = prompt;
                 }
                 else
                 {
@@ -138,6 +138,8 @@ namespace EBookMan
                 }
             }
 
+            this.progressBar.Hide();
+            this.lblStep.Hide();
             this.btnOK.Text = Properties.Resources.ButtonClose;
             this.ControlBox = true;
         }
