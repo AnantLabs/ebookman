@@ -27,6 +27,12 @@ namespace EBookMan
             this.timer = new Timer();
             this.timer.Interval = 200;
             this.timer.Tick += new EventHandler(OnTimerTick);
+
+
+            // prepare empty filters for all libraries
+
+            foreach ( ILibrary lib in DataManager.Instance.Libraries )
+                this.filters.Add(lib, null);
         }
 
 
@@ -47,12 +53,9 @@ namespace EBookMan
 
         #region public methods
 
-        public void UpdateUI()
+        public void UpdateLanguageAndTags()
         {
             ILibrary lib = DataManager.Instance.ActiveLibrary;
-
-            this.SuspendLayout();
-
 
             // update language drop down
 
@@ -68,14 +71,10 @@ namespace EBookMan
             }
 
             this.cmbLanguage.Enabled = ( langs != null && langs.Count > 0 );
+            this.cmbLanguage.EndUpdate();
 
 
-            this.cmbLanguage.ResumeLayout();
-
-            this.listTags.Items.Clear();
-
-
-            // update list of tags
+            // update tag list
 
             this.listTags.BeginUpdate();
             this.listTags.Items.Clear();
@@ -90,15 +89,15 @@ namespace EBookMan
 
             this.listTags.Enabled = ( tags != null && tags.Count > 0 );
             this.listTags.EndUpdate();
-
-
-            // update control values
-
-            if ( lib != null && lib.Filter != null )
-                UpdateUiFromFilter(lib.Filter);
-
-            this.ResumeLayout();
         }
+
+
+        public Filter Filter
+        {
+            get { return this.filters[ DataManager.Instance.ActiveLibrary ]; }
+        }
+
+        public event EventHandler FilterChanged;
 
         #endregion
 
@@ -106,7 +105,14 @@ namespace EBookMan
 
         private void OnActiveLibraryChanged(object sender, EventArgs e)
         {
-            UpdateUI();
+            if (this.InvokeRequired)
+            {
+                this.BeginInvoke(new EventHandler(OnActiveLibraryChanged));
+                return;
+            }
+
+            UpdateLanguageAndTags();
+            UpdateControls(this.filters[ DataManager.Instance.ActiveLibrary ]);
         }
 
 
@@ -126,33 +132,30 @@ namespace EBookMan
         
         private void OnReset(object sender, EventArgs e)
         {
-            if ( DataManager.Instance.ActiveLibrary != null )
-            {
-                DataManager.Instance.ActiveLibrary.Filter = null;
-                UpdateUiFromFilter(null);
-            }
+            this.filters[DataManager.Instance.ActiveLibrary] = null;
+            UpdateControls(null);
+            FireFilterChanged();
         }
 
 
         private void OnTimerTick(object sender, EventArgs e)
         {
-            if (this.waitCounter <= 0)
+            if ( this.waitCounter > 0 )
             {
-                this.timer.Stop();
-                if (DataManager.Instance.ActiveLibrary != null)
-                {
-                    DataManager.Instance.ActiveLibrary.Filter = GetFilterFromUi();
-                    return;
-                }
+                this.waitCounter--;
+                return;
             }
 
-            this.waitCounter --;
+            this.timer.Stop();
+            this.filters[DataManager.Instance.ActiveLibrary] = GetFilter();
+            FireFilterChanged();
         }
 
 
         private void OnStarsChanged(object sender, EventArgs e)
         {
             this.chkRating.Text = string.Format(Properties.Resources.RatingTextNumbered, this.rating.Stars);
+            OnCriteriaChanged(this, EventArgs.Empty);
         }
 
 
@@ -160,15 +163,23 @@ namespace EBookMan
         {
             this.rating.Enabled = this.chkRating.Checked;
             this.chkIncludeHigher.Enabled = this.chkIncludeHigher.Checked;
-
             this.chkRating.Text = Properties.Resources.RatingTextEmpty;
+
+            OnCriteriaChanged(this, EventArgs.Empty);
         }
         
         #endregion
 
         #region helpers
 
-        private Filter GetFilterFromUi()
+        private void FireFilterChanged()
+        {
+            EventHandler h = this.FilterChanged;
+            if ( h != null ) h(this, EventArgs.Empty);
+        }
+
+        
+        private Filter GetFilter()
         {
             Filter filter = new Filter();
 
@@ -222,7 +233,7 @@ namespace EBookMan
         }
 
 
-        private void UpdateUiFromFilter(Filter filter)
+        private void UpdateControls(Filter filter)
         {
             object value;
             FilterOperation op;
@@ -326,6 +337,7 @@ namespace EBookMan
 
         private Timer timer;
         private int waitCounter;
+        private Dictionary<ILibrary, Filter> filters = new Dictionary<ILibrary, Filter>();
 
         #endregion
     }

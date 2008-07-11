@@ -21,11 +21,12 @@ namespace EBookMan
             get;
         }
 
-        void BeginUpdate();
+        Guid Guid
+        {
+            get;
+        }
 
-        void Add(Book book);
-
-        void EndUpdate();
+        void Fill(ILibrary library, Filter filter);
 
         void Clear();
     }

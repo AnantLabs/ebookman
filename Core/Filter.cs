@@ -66,6 +66,11 @@ namespace EBookMan
         }
 
 
+        public string GetSqlQuery()
+        {
+            throw new NotImplementedException();
+        }
+
         // TODO: remove
         //public void ClearFieldFilter(string name)
         //{

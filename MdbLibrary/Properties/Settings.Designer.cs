@@ -38,18 +38,6 @@ namespace EBookMan.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("True")]
-        public bool Active {
-            get {
-                return ((bool)(this["Active"]));
-            }
-            set {
-                this["Active"] = value;
-            }
-        }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("True")]
         public bool CompressFiles {
             get {
                 return ((bool)(this["CompressFiles"]));
@@ -80,6 +68,17 @@ namespace EBookMan.Properties {
             }
             set {
                 this["CompressableFiles"] = value;
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.SpecialSettingAttribute(global::System.Configuration.SpecialSetting.ConnectionString)]
+        [global::System.Configuration.DefaultSettingValueAttribute("Provider=Microsoft.Jet.OLEDB.4.0;Data Source=|DataDirectory|\\Resources\\books.mdb;" +
+            "Persist Security Info=True;Jet OLEDB:Database Password=BookMan")]
+        public string booksConnectionString {
+            get {
+                return ((string)(this["booksConnectionString"]));
             }
         }
     }

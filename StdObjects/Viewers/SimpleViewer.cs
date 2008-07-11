@@ -1,6 +1,7 @@
 using System;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Collections.Generic;
 
 namespace EBookMan
 {
@@ -46,32 +47,43 @@ namespace EBookMan
         }
 
 
-        void IViewer.BeginUpdate()
+        private readonly Guid guid = new Guid("{42cd58e7-f2c8-4ce4-80e1-229eb3bca363}");
+
+        public Guid Guid
         {
+            get { return this.guid; }
+        }
+
+
+        void IViewer.Fill(ILibrary library, Filter filter)
+        {
+            IEnumerator<Book> enumerator = library.GetEnumerator(filter);
+
             this.BeginUpdate();
-        }
+            this.Items.Clear();
 
+            enumerator.Reset();
+            while ( enumerator.MoveNext() )
+            {
+                Book book = enumerator.Current;
+                string[] fields = new string[] { book.Title, book.Authors, book.Rating.ToString() };
 
-        void IViewer.EndUpdate()
-        {
+                ListViewItem item = new ListViewItem(fields);
+                item.Tag = book.ID;
+
+                this.Items.Add(item);
+            }
+
             this.EndUpdate();
-        }
-
-
-        void IViewer.Add(Book book)
-        {
-            string[] fields = new string[] { book.Title, book.Authors, book.Rating.ToString() };
-
-            ListViewItem item = new ListViewItem(fields);
-            item.Tag = book.ID;
-
-            this.Items.Add(item);
+            enumerator.Dispose();
         }
 
 
         void IViewer.Clear()
         {
+            this.BeginUpdate();
             this.Items.Clear();
+            this.EndUpdate();
         }
 
         #endregion

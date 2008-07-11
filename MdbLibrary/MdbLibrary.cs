@@ -11,8 +11,12 @@ namespace EBookMan
 {
     public partial class MdbLibrary : ILibrary, IPlugin
     {
+        #region Constructor/Dispose
+
         public MdbLibrary()
         {
+            // load the path to the dbfile or create a default one
+
             string path = Properties.Settings.Default.DbRoot;
             if (string.IsNullOrEmpty(path))
             {
@@ -21,12 +25,31 @@ namespace EBookMan
                 Properties.Settings.Default.Save();
             }
 
+            
+            // if file does not exist there - copy the one supplied
+
+            if ( !File.Exists(string.Format("{0}books.mdb", path)) )
+            {
+                if ( !Directory.Exists(path) )
+                    Directory.CreateDirectory(path);
+
+                File.Copy(DataManager.Instance.AppFolder + "books.mdb", path);
+
+                Logger.Warning("MDBLibrary: MDB file was not fount at {0}. Copying default.", path);
+            }
+
+
+            // connect to the database
+
             string connString = string.Format(
                 "Provider=Microsoft.Jet.OLEDB.4.0; Data Source={0}books.mdb;Jet OLEDB:Database Password=BookMan",
                 path);
 
             this.connection = new OleDbConnection(connString);
             this.connection.Open();
+
+
+            // preparing the list of compressable extensions
 
             string list = Properties.Settings.Default.CompressableFiles;
             if ( !string.IsNullOrEmpty(list) )
@@ -40,7 +63,19 @@ namespace EBookMan
             }
         }
 
-        #region IPlugin Members
+
+        public void Dispose()
+        {
+            if ( this.connection != null )
+            {
+                this.connection.Close();
+                this.connection = null;
+            }
+        }
+
+        #endregion
+
+        #region IPlugin implementation
 
         public void RegisterMainWindowUI(Form mainWindow)
         {
@@ -61,9 +96,6 @@ namespace EBookMan
             this.button.ToolTipText = Properties.Resources.MdbTooltip;
 
             toolstrip.Items.Add(this.button);
-
-            if ( Properties.Settings.Default.Active )
-                OnToolbarButtonClicked(this, EventArgs.Empty);
         }
 
 
@@ -71,22 +103,6 @@ namespace EBookMan
         {
             throw new Exception("The method or operation is not implemented.");
         }
-
-        #endregion
-
-        #region IEnumeratable
-
-        public IEnumerator<Book> GetEnumerator()
-        {
-            throw new NotImplementedException();
-        }
-
-
-        IEnumerator IEnumerable.GetEnumerator()
-        {
-            return GetEnumerator(); 
-        }
-
 
         #endregion
 
@@ -99,77 +115,9 @@ namespace EBookMan
 
             this.button.Checked = true;
             DataManager.Instance.ActiveLibrary = this;
-            Properties.Settings.Default.Active = true;
-            Properties.Settings.Default.Save();
-
-            // TODO: implement removeing the active flag from previous library
         }
 
         #endregion
-
-        #region IDisposable implementation
-
-        /// <summary>
-		/// Track whether Dispose has been called
-		/// </summary>
-		private bool disposed = false;
-        
-		/// <summary>
-		/// Implement IDisposable.
-		/// Do not make this method virtual.
-		/// A derived class should not be able to override this method.
-		/// </summary>
-		public void Dispose()
-		{
-			if(! this.disposed)
-			{
-				Dispose(true);
-			}
-
-			// Take yourself off the Finalization queue 
-			// to prevent finalization code for this object
-			// from executing a second time.
-			GC.SuppressFinalize(this);
-		}
-
-		/// <summary>
-		/// Dispose(bool disposing) executes in two distinct scenarios.
-		/// If disposing equals true, the method has been called directly
-		/// or indirectly by a user's code. Managed and unmanaged resources
-		/// can be disposed.
-		/// If disposing equals false, the method has been called by the 
-		/// runtime from inside the finalizer and you should not reference 
-		/// other objects. Only unmanaged resources can be disposed.
-		/// </summary>
-		/// <param name="disposing"></param>
-		protected virtual void Dispose (bool disposing)
-		{
-            if ( this.connection != null )
-            {
-                this.connection.Close();
-                this.connection = null;
-            }
-
-			this.disposed = true;         
-		}
-
-		/// <summary>
-		/// Use C# destructor syntax for finalization code.
-		/// This destructor will run only if the Dispose method 
-		/// does not get called.
-		/// It gives your base class the opportunity to finalize.
-		/// Do not provide destructors in types derived from this class.
-		/// </summary>
-        ~MdbLibrary()      
-		{
-			// Do not re-create Dispose clean-up code here.
-			// Calling Dispose(false) is optimal in terms of
-			// readability and maintainability.
-			if (! this.disposed)
-				Dispose(false);
-		}
-
-		#endregion
 
         #region Private members
 
@@ -179,8 +127,6 @@ namespace EBookMan
 
         private List<string> languanges;
         private List<string> tags;
-
-        private Filter filter;
 
         #endregion
     }

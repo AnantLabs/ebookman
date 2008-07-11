@@ -5,9 +5,6 @@
     <Setting Name="DbRoot" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="Active" Type="System.Boolean" Scope="User">
-      <Value Profile="(Default)">True</Value>
-    </Setting>
     <Setting Name="CompressFiles" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -16,6 +13,14 @@
     </Setting>
     <Setting Name="CompressableFiles" Type="System.String" Scope="User">
       <Value Profile="(Default)">*.txt;*.pdf;*.fb2;*.html;*.htm;*.doc;*.rtf</Value>
+    </Setting>
+    <Setting Name="booksConnectionString" Type="(Connection string)" Scope="Application">
+      <DesignTimeValue Profile="(Default)">&lt;?xml version="1.0" encoding="utf-16"?&gt;
+&lt;SerializableConnectionString xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema"&gt;
+  &lt;ConnectionString&gt;Provider=Microsoft.Jet.OLEDB.4.0;Data Source=|DataDirectory|\Resources\books.mdb;Persist Security Info=True;Jet OLEDB:Database Password=BookMan&lt;/ConnectionString&gt;
+  &lt;ProviderName&gt;System.Data.OleDb&lt;/ProviderName&gt;
+&lt;/SerializableConnectionString&gt;</DesignTimeValue>
+      <Value Profile="(Default)">Provider=Microsoft.Jet.OLEDB.4.0;Data Source=|DataDirectory|\Resources\books.mdb;Persist Security Info=True;Jet OLEDB:Database Password=BookMan</Value>
     </Setting>
   </Settings>
 </SettingsFile>

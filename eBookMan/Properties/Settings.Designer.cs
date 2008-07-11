@@ -25,10 +25,10 @@ namespace EBookMan.Properties {
         
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("Simple Viewer")]
-        public string Viewer {
+        [global::System.Configuration.DefaultSettingValueAttribute("42cd58e7-f2c8-4ce4-80e1-229eb3bca363")]
+        public global::System.Guid Viewer {
             get {
-                return ((string)(this["Viewer"]));
+                return ((global::System.Guid)(this["Viewer"]));
             }
             set {
                 this["Viewer"] = value;
