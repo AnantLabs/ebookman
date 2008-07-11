@@ -100,6 +100,9 @@ namespace EBookMan
             this.button.Checked = true;
             DataManager.Instance.ActiveLibrary = this;
             Properties.Settings.Default.Active = true;
+            Properties.Settings.Default.Save();
+
+            // TODO: implement removeing the active flag from previous library
         }
 
         #endregion
@@ -176,6 +179,8 @@ namespace EBookMan
 
         private List<string> languanges;
         private List<string> tags;
+
+        private Filter filter;
 
         #endregion
     }

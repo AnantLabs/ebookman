@@ -41,9 +41,9 @@ namespace EBookMan
             this.btnOptions = new System.Windows.Forms.ToolStripButton();
             this.splitter1 = new System.Windows.Forms.Splitter();
             this.splitter2 = new System.Windows.Forms.Splitter();
-            this.listView1 = new System.Windows.Forms.ListView();
-            this.bookPanel1 = new BookPanel();
-            this.filterPanel = new FilterPanel();
+            this.bookPanel1 = new EBookMan.BookPanel();
+            this.filterPanel = new EBookMan.FilterPanel();
+            this.btnView = new System.Windows.Forms.ToolStripSplitButton();
             this.toolStrip.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -57,7 +57,8 @@ namespace EBookMan
             this.btnEdit,
             this.btnCopy,
             this.btnRead,
-            this.btnOptions});
+            this.btnOptions,
+            this.btnView});
             this.toolStrip.LayoutStyle = System.Windows.Forms.ToolStripLayoutStyle.HorizontalStackWithOverflow;
             this.toolStrip.Location = new System.Drawing.Point(0, 0);
             this.toolStrip.Name = "toolStrip";
@@ -181,15 +182,6 @@ namespace EBookMan
             this.splitter2.TabIndex = 4;
             this.splitter2.TabStop = false;
             // 
-            // listView1
-            // 
-            this.listView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.listView1.Location = new System.Drawing.Point(0, 52);
-            this.listView1.Name = "listView1";
-            this.listView1.Size = new System.Drawing.Size(527, 281);
-            this.listView1.TabIndex = 5;
-            this.listView1.UseCompatibleStateImageBehavior = false;
-            // 
             // bookPanel1
             // 
             this.bookPanel1.BackColor = System.Drawing.Color.PeachPuff;
@@ -209,13 +201,23 @@ namespace EBookMan
             this.filterPanel.Size = new System.Drawing.Size(158, 434);
             this.filterPanel.TabIndex = 1;
             // 
+            // btnView
+            // 
+            this.btnView.AutoSize = false;
+            this.btnView.AutoToolTip = false;
+            this.btnView.Image = ( ( System.Drawing.Image ) ( resources.GetObject("btnView.Image") ) );
+            this.btnView.ImageTransparentColor = System.Drawing.Color.Magenta;
+            this.btnView.Name = "btnView";
+            this.btnView.Size = new System.Drawing.Size(60, 49);
+            this.btnView.Text = "View";
+            this.btnView.TextImageRelation = System.Windows.Forms.TextImageRelation.ImageAboveText;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.BackColor = System.Drawing.SystemColors.Control;
             this.ClientSize = new System.Drawing.Size(688, 486);
-            this.Controls.Add(this.listView1);
             this.Controls.Add(this.splitter2);
             this.Controls.Add(this.bookPanel1);
             this.Controls.Add(this.splitter1);
@@ -237,7 +239,6 @@ namespace EBookMan
         private System.Windows.Forms.Splitter splitter1;
         private BookPanel bookPanel1;
         private System.Windows.Forms.Splitter splitter2;
-        private System.Windows.Forms.ListView listView1;
         private System.Windows.Forms.ToolStripSplitButton btnAdd;
         private System.Windows.Forms.ToolStripMenuItem addFromUrlToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem addfileToolStripMenuItem;
@@ -247,6 +248,7 @@ namespace EBookMan
         private System.Windows.Forms.ToolStripButton btnCopy;
         private System.Windows.Forms.ToolStripButton btnRead;
         private System.Windows.Forms.ToolStripButton btnOptions;
+        private System.Windows.Forms.ToolStripSplitButton btnView;
     }
 }
 

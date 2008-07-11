@@ -15,7 +15,6 @@ namespace EBookMan
             DataManager.Init();
 
             Application.EnableVisualStyles();
-            Application.SetCompatibleTextRenderingDefault(false);            
             Application.Run(new MainWindow());
 
             DataManager.Instance.Dispose();

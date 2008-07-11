@@ -195,12 +195,17 @@ namespace EBookMan
 
         public Filter Filter
         {
-            get { throw new NotImplementedException(); }
+            // TODO: implement
+            get 
+            {
+                return this.filter; 
+            }
             set
             {
+                this.filter = value;
+
                 EventHandler h = this.FilterChanged;
                 if ( h != null ) h(this, EventArgs.Empty);
-                throw new NotImplementedException();
             }
         }
 
@@ -399,8 +404,16 @@ namespace EBookMan
 
                 List<string> list = new List<string>();
 
-                while (reader.Read())
-                    list.Add(reader.GetString(0));
+                while ( reader.Read() )
+                {
+                    if ( reader.IsDBNull(0) )
+                        continue;
+
+                    string val = reader.GetString(0);
+
+                    if ( !string.IsNullOrEmpty(val) )
+                        list.Add(val);
+                }
 
                 return list;
             }
