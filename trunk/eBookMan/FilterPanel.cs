@@ -27,14 +27,20 @@ namespace EBookMan
             this.timer = new Timer();
             this.timer.Interval = 200;
             this.timer.Tick += new EventHandler(OnTimerTick);
+        }
 
+
+        protected override void OnLoad(EventArgs e)
+        {
+            if ( this.DesignMode || ( this.Site != null && this.Site.DesignMode ) )
+                return;
 
             // subscribe to the library change event
             // when the library is changed - load
             // the last used filter
 
             DataManager.Instance.ActiveLibraryChange += new EventHandler(OnActiveLibraryChanged);
-            OnActiveLibraryChanged(this, EventArgs.Empty);
+            base.OnLoad(e);
         }
 
         #endregion
@@ -100,7 +106,7 @@ namespace EBookMan
 
         private void OnActiveLibraryChanged(object sender, EventArgs e)
         {
-            Update();
+            UpdateUI();
         }
 
 

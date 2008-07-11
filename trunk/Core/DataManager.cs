@@ -20,6 +20,7 @@ namespace EBookMan
             this.plugins = new List<IPlugin>();
             this.providers = new List<IDataProvider>();
             this.formats = new List<IBookFormat>();
+            this.viewers = new List<IViewer>();
 
             LoadObjects(this.appFolder);
             LoadObjects(this.appFolder + "plugins");
@@ -234,6 +235,11 @@ namespace EBookMan
         }
 
 
+        public List<IViewer> Viewers
+        {
+            get { return this.viewers; }
+        }
+
         #endregion
 
         #region private helpers and members
@@ -294,6 +300,12 @@ namespace EBookMan
                             CreateObject<IBookFormat>(ref this.formats, t);
                             continue;
                         }
+
+                        if ( typeof(IViewer).IsAssignableFrom(t) )
+                        {
+                            CreateObject<IViewer>(ref this.viewers, t);
+                            continue;
+                        }
                     }
                 }
 
@@ -315,7 +327,7 @@ namespace EBookMan
                     list.Add(o2);
             }
 
-            catch
+            catch (Exception ex)
             {
                 // swallow
             }
@@ -327,6 +339,7 @@ namespace EBookMan
         private List<IPlugin> plugins;
         private List<IDataProvider> providers;
         private List<IBookFormat> formats;
+        private List<IViewer> viewers;
 
         private Form mainWindow;
         private string appFolder;
