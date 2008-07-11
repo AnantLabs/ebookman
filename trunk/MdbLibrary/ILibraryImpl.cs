@@ -11,48 +11,22 @@ namespace EBookMan
 {
     partial class MdbLibrary
     {
-        #region ILibrary Members
+        #region ILibrary Implementation
 
-        // TODO: remove?
-        //public bool Find(FieldFilter criteria, HandleBookDelegate handleBookDelegate)
-        //{
-        //    StringBuilder query = new StringBuilder("SELECT * FROM Books");
-        //    if ( criteria != null )
-        //    {
-        //        query.Append(" WHERE ");
+        public Guid Guid
+        {
+            get { return DataManager.Instance.DefaultLibrary; }
+        }
 
-        //        if ( !string.IsNullOrEmpty(criteria.Text) )
-        //        {
-        //            if ( ( criteria.TextSearchLocation & TextSearchLocation.Authors ) == TextSearchLocation.Authors )
-        //                query.Append(string.Format(" (Authors CONTAINS {0})", criteria.Text));
-        //        }
-        //    }
 
-        //    try
-        //    {
-        //        OleDbCommand command = new OleDbCommand(query.ToString(), this.connection);
-        //        OleDbDataReader reader = command.ExecuteReader();
+        public IEnumerator<Book> GetEnumerator(Filter filter)
+        {
+            if (filter == null)
+                throw new NullReferenceException("filter");
 
-        //        if ( !reader.HasRows )
-        //            return false;
-
-        //        while ( reader.Read() )
-        //        {
-        //            System.Diagnostics.Debug.WriteLine(reader[ "Title" ]);
-        //            System.Diagnostics.Debug.WriteLine(reader[ "Authors" ]);
-        //            System.Diagnostics.Debug.WriteLine(reader[ "Series" ]);
-        //        }
-
-        //        reader.Close();
-        //        return true;
-        //    }
-
-        //    catch ( OleDbException )
-        //    {
-        //        return false;
-        //    }
-        //}
-
+            return new MdbEnumerator(filter.GetSqlQuery(), this.connection);
+        }
+        
 
         public void Add(Book book, IAsyncProcessHost progress)
         {
@@ -191,26 +165,6 @@ namespace EBookMan
                 }
             }
         }
-
-
-        public Filter Filter
-        {
-            // TODO: implement
-            get 
-            {
-                return this.filter; 
-            }
-            set
-            {
-                this.filter = value;
-
-                EventHandler h = this.FilterChanged;
-                if ( h != null ) h(this, EventArgs.Empty);
-            }
-        }
-
-
-        public event EventHandler FilterChanged;
 
 
         public List<string> GetLanguages()

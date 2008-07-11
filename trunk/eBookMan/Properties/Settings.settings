@@ -2,8 +2,8 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="EBookMan.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="Viewer" Type="System.String" Scope="User">
-      <Value Profile="(Default)">Simple Viewer</Value>
+    <Setting Name="Viewer" Type="System.Guid" Scope="User">
+      <Value Profile="(Default)">42cd58e7-f2c8-4ce4-80e1-229eb3bca363</Value>
     </Setting>
   </Settings>
 </SettingsFile>

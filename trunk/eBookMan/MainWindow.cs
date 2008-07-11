@@ -16,41 +16,9 @@ namespace EBookMan
         {
             InitializeComponent();
 
+            this.filterPanel.FilterChanged += new EventHandler(OnUpdateView);
 
-            // create view submenu and initialize viewers
-
-            ToolStripItem current = null;
-            string currentName = Properties.Settings.Default.Viewer;
-
-            foreach ( IViewer viewer in DataManager.Instance.Viewers )
-            {
-                if (viewer.Control != null)
-                {
-                    this.Controls.Add(viewer.Control);
-                    viewer.Control.Dock = DockStyle.Fill;
-                    viewer.Control.Location = new Point (0, 0);
-                    viewer.Control.Visible = false;
-                }
-
-                ToolStripMenuItem item = new ToolStripMenuItem();
-                item.Text = viewer.Name;
-                item.Tag = viewer;
-                item.Click += new EventHandler(OnViewChange);
-
-                if ( string.Compare(viewer.Name, currentName, true) == 0 )
-                    current = item;
-
-                this.btnView.DropDownItems.Add(item);
-            }
-
-
-            // select last know viewer
-
-            if ( current == null && this.btnView.DropDownItems.Count > 0 )
-                current = this.btnView.DropDownItems[ 0 ];
-
-            if ( current != null )
-                OnViewChange(current, EventArgs.Empty);
+            CreateViewMenu();
         }
 
 
@@ -61,9 +29,8 @@ namespace EBookMan
 
             DataManager.Instance.MainWindow = this;
 
-            DataManager.Instance.DataChange += new EventHandler(OnDataChange);
-            if ( DataManager.Instance.ActiveLibrary != null )
-                OnDataChange(this, EventArgs.Empty);
+            DataManager.Instance.ActiveLibraryChange += new EventHandler(OnUpdateView);
+            OnUpdateView(this, EventArgs.Empty);
 
             base.OnLoad(e);
         }
@@ -72,53 +39,49 @@ namespace EBookMan
 
         #region system event handlers
 
-        private void OnDataChange(object sender, EventArgs e)
+        private void OnUpdateView(object sender, EventArgs e)
         {
             if ( this.InvokeRequired )
             {
-                this.BeginInvoke(new EventHandler(OnDataChange));
+                this.BeginInvoke(new EventHandler(OnUpdateView));
                 return;
             }
 
-            if (DataManager.Instance.ActiveLibrary == null || this.currentViewer == null)
+            if (DataManager.Instance.ActiveLibrary == null || this.currViewer == null)
                 return;
 
-            this.currentViewer.BeginUpdate();
-
-            foreach (Book book in DataManager.Instance.ActiveLibrary)
-                this.currentViewer.Add(book);
-
-            this.currentViewer.EndUpdate();
+            this.currViewer.Fill(DataManager.Instance.ActiveLibrary, this.filterPanel.Filter);
         }
 
         #endregion
 
         #region UI event handlers
 
-        private void OnViewChange (object sender, EventArgs args)
+        private void OnViewChanged (object sender, EventArgs args)
         {
+            ToolStripItem item = sender as ToolStripItem;
+            IViewer newViewer = (item == null)? null : item.Tag as IViewer;
+
+            if (newViewer == null)
+                return;
+
             this.SuspendLayout();
 
-            ToolStripItem item = sender as ToolStripItem;
-            IViewer newView = (item == null)? null : item.Tag as IViewer;
-
-            if (newView == null)
-                return;
 
             // hide the previous view and clear the data
 
-            if (this.currentViewer != null && this.currentViewer.Control != null)
+            if (this.currViewer != null && this.currViewer.Control != null)
             {
-                this.currentViewer.Control.Visible = false;
-                this.currentViewer.Clear();
+                this.currViewer.Control.Visible = false;
+                this.currViewer.Clear();
             }
 
             
             // fill up the new view and show it
 
-            this.currentViewer = newView;
-            OnDataChange(this, EventArgs.Empty); // fill up the data
-            this.currentViewer.Control.Visible = true;
+            this.currViewer = newViewer;
+            OnUpdateView(this, EventArgs.Empty);
+            this.currViewer.Control.Visible = true;
 
             this.ResumeLayout();
         }
@@ -203,7 +166,7 @@ namespace EBookMan
 
             // update filter with new languages and tags
 
-            this.filterPanel.UpdateUI();
+            this.filterPanel.UpdateLanguageAndTags();
         }
 
 
@@ -216,6 +179,43 @@ namespace EBookMan
 
         #region helpers
 
+        private void CreateViewMenu()
+        {
+            foreach ( IViewer viewer in DataManager.Instance.Viewers )
+            {
+                // init viewer control
+
+                if (viewer.Control != null)
+                {
+                    this.Controls.Add(viewer.Control);
+                    viewer.Control.Dock = DockStyle.Fill;
+                    viewer.Control.Location = new Point (0, 0);
+                    viewer.Control.Visible = false;
+                }
+
+
+                // create viewer menu item
+
+                ToolStripMenuItem item = new ToolStripMenuItem();
+                item.Text = viewer.Name;
+                item.Tag = viewer.Guid;
+                item.Click += new EventHandler(OnViewChanged);
+
+                this.btnView.DropDownItems.Add(item);
+            }
+
+
+            // select last know viewer
+            
+            Guid lastViewer = Properties.Settings.Default.Viewer;
+
+            OnViewChanged(
+                DataManager.Instance.Viewers.Find(
+                    delegate(IViewer viewer) { return viewer.Guid.Equals(lastViewer); }), 
+                EventArgs.Empty);
+        }
+
+        
         private string[] AddFileHelper()
         {
             if ( DataManager.Instance.ActiveLibrary == null )
@@ -257,7 +257,7 @@ namespace EBookMan
 
         #region members
 
-        private IViewer currentViewer = null;
+        private IViewer currViewer = null;
 
         #endregion
     }

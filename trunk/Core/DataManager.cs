@@ -21,9 +21,18 @@ namespace EBookMan
             this.providers = new List<IDataProvider>();
             this.formats = new List<IBookFormat>();
             this.viewers = new List<IViewer>();
+            this.libraries = new List<ILibrary>();
+
+
+            // load all dynamic objects from the root and plugin subfolder
 
             LoadObjects(this.appFolder);
             LoadObjects(this.appFolder + "plugins");
+
+
+            // select initiall the default library
+
+            this.currLibrary = this.libraries.Find(delegate(ILibrary lib) { return lib.Guid.Equals(this.defaultLibrary); });
         }
 
 
@@ -36,18 +45,6 @@ namespace EBookMan
 
         public void Dispose()
         {
-            // dispose the plug-ins (always disposable)
-
-            if ( this.plugins != null )
-            {
-                foreach ( IPlugin plugin in this.plugins )
-                    plugin.Dispose();
-
-                this.plugins.Clear();
-                this.plugins = null;
-            }
-
-
             // dispose the data provider (disposable optionally)
 
             if ( this.providers != null )
@@ -55,8 +52,7 @@ namespace EBookMan
                 foreach ( IDataProvider provider in this.providers )
                 {
                     IDisposable o = provider as IDisposable;
-                    if ( o != null )
-                        o.Dispose();
+                    if ( o != null ) o.Dispose();
                 }
 
                 this.providers.Clear();
@@ -71,12 +67,53 @@ namespace EBookMan
                 foreach ( IBookFormat format in this.formats )
                 {
                     IDisposable o = format as IDisposable;
-                    if ( o != null )
-                        o.Dispose();
+                    if ( o != null ) o.Dispose();
                 }
 
                 this.formats.Clear();
                 this.formats = null;
+            }
+
+
+            // dispose formats (disposeable optionally)
+
+            if ( this.viewers != null )
+            {
+                foreach ( IViewer viewer in this.viewers)
+                {
+                    IDisposable o = viewer as IDisposable;
+                    if ( o != null ) o.Dispose();
+                }
+
+                this.viewers.Clear();
+                this.viewers = null;
+            }
+
+
+            // dispose formats (disposeable optionally)
+
+            if ( this.libraries != null )
+            {
+                foreach ( ILibrary library in this.libraries)
+                {
+                    IDisposable o = library as IDisposable;
+                    if ( o != null ) o.Dispose();
+                }
+
+                this.libraries.Clear();
+                this.libraries = null;
+            }
+
+
+            // dispose the plug-ins (always disposable)
+
+            if ( this.plugins != null )
+            {
+                foreach ( IPlugin plugin in this.plugins )
+                    plugin.Dispose();
+
+                this.plugins.Clear();
+                this.plugins = null;
             }
 
 
@@ -117,9 +154,10 @@ namespace EBookMan
                         plugin.RegisterMainWindowUI(this.mainWindow);
                     }
 
-                    catch
+                    catch (Exception ex)
                     {
                         // swallow
+                        Logger.Error("RegisterMainUI ({0}) {1}", plugin.ToString(), ex.Message);
                     }
                 }
             }
@@ -138,16 +176,7 @@ namespace EBookMan
 
             set
             {
-                EventHandler filterChanged = new EventHandler(OnFilterChange);
-
-                if ( this.currLibrary != null )
-                    this.currLibrary.FilterChanged -= filterChanged;
-
                 this.currLibrary = value;
-
-                if ( this.currLibrary != null )
-                    this.currLibrary.FilterChanged += filterChanged;
-
                 FireLibraryChange();
             }
         }
@@ -156,16 +185,12 @@ namespace EBookMan
         public event EventHandler ActiveLibraryChange;
 
 
-        public event EventHandler DataChange;
-
-
         /// <summary>
         /// Get the metadata and the file from the URL using
         /// provided DataProvider and add it to the current 
         /// Library. Supposedly runs in a different thread.
         /// If the provider is not specified - it finds matching one
         /// </summary>
-        /// <param name="url"></param>
         public void AddBook(string url, IDataProvider provider, IAsyncProcessHost progress)
         {
             if ( provider == null )
@@ -219,16 +244,6 @@ namespace EBookMan
         }
 
 
-        public IBookFormat GetFormatByGuid(Guid guid)
-        {
-            foreach ( IBookFormat format in this.formats )
-                if ( format.Guid == guid )
-                    return format;
-
-            return null;
-        }
-
-
         public List<IBookFormat> Formats
         {
             get { return this.formats; }
@@ -240,6 +255,24 @@ namespace EBookMan
             get { return this.viewers; }
         }
 
+
+        public List<ILibrary> Libraries
+        {
+            get { return this.libraries; }
+        }
+
+
+        public Guid DefaultLibrary
+        {
+            get { return this.defaultLibrary; }
+        }
+
+
+        public string AppFolder
+        {
+            get { return this.appFolder; }
+        }
+
         #endregion
 
         #region private helpers and members
@@ -249,19 +282,6 @@ namespace EBookMan
             EventHandler handler = this.ActiveLibraryChange;
             if ( handler != null )
                 handler(this, EventArgs.Empty);
-
-            handler = this.DataChange;
-            if ( handler != null ) handler(this, EventArgs.Empty);
-        }
-
-
-        private void OnFilterChange (object sender, EventArgs args)
-        {
-            if (sender == this.currLibrary)
-            {
-                EventHandler handler = this.DataChange;
-                if ( handler != null ) handler(this, EventArgs.Empty);
-            }
         }
 
 
@@ -283,53 +303,62 @@ namespace EBookMan
 
                     foreach ( Type t in assembly.GetTypes() )
                     {
-                        if ( typeof(IPlugin).IsAssignableFrom(t) )
-                        {
-                            CreateObject<IPlugin>(ref this.plugins, t);
+                        if ( CreateObject(t, ref this.providers) )
                             continue;
-                        }
 
-                        if ( typeof(IDataProvider).IsAssignableFrom(t) )
-                        {
-                            CreateObject<IDataProvider>(ref this.providers, t);
+                        if ( CreateObject(t, ref this.formats) )
                             continue;
-                        }
 
-                        if ( typeof(IBookFormat).IsAssignableFrom(t) )
-                        {
-                            CreateObject<IBookFormat>(ref this.formats, t);
+                        if ( CreateObject(t, ref this.viewers) )
                             continue;
-                        }
 
-                        if ( typeof(IViewer).IsAssignableFrom(t) )
-                        {
-                            CreateObject<IViewer>(ref this.viewers, t);
+                        if ( CreateObject(t, ref this.libraries) )
                             continue;
-                        }
+
+                        if ( CreateObject(t, ref this.plugins) )
+                            continue;
                     }
                 }
 
-                catch
+                catch (Exception ex)
                 {
                     // swallow
+                    Logger.Warning("LoadObject: {0}", ex.InnerException.Message);
                 }
             }
         }
 
 
-        private void CreateObject<T>(ref List<T> list, Type t) where T : class
+        private bool CreateObject<T>(Type type, ref List<T> list) where T : class
         {
+            // if wrong type - continue
+
+            if ( !typeof(T).IsAssignableFrom(type) )
+                return false;
+
             try
             {
-                object o = Activator.CreateInstance(t);
+                // create an instance and add it to the provided list
+
+                object o = Activator.CreateInstance(type);
                 T o2 = o as T;
                 if ( o2 != null )
                     list.Add(o2);
+
+
+                // if this is IPlugin - add it to the plugin list as well
+
+                if ( o != null && o is IPlugin )
+                    this.plugins.Add(o as IPlugin);
+
+                return true;
             }
 
             catch (Exception ex)
             {
                 // swallow
+                Logger.Warning("CreateObject: {0}", ex.InnerException);
+                return false;
             }
         }
 
@@ -340,10 +369,13 @@ namespace EBookMan
         private List<IDataProvider> providers;
         private List<IBookFormat> formats;
         private List<IViewer> viewers;
+        private List<ILibrary> libraries;
 
         private Form mainWindow;
-        private string appFolder;
         private ILibrary currLibrary;
+
+        private readonly string appFolder;
+        private readonly Guid defaultLibrary = new Guid("{B5ACDA8E-371B-4faa-95EB-9996EA5BB3D2}");
 
         #endregion
     }

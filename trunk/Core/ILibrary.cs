@@ -4,20 +4,19 @@ using System.Collections.Generic;
 
 namespace EBookMan
 {
-    public interface ILibrary : IEnumerable<Book> 
+    public interface ILibrary
     {
-        void Add(Book book, IAsyncProcessHost progress);    // progress percent 50%-100%
-
-        Filter Filter
+        Guid Guid
         {
             get;
-            set;
         }
+
+        void Add(Book book, IAsyncProcessHost progress);
 
         List<string> GetLanguages();
 
         List<string> GetAvailableTags();
 
-        event EventHandler FilterChanged;
+        IEnumerator<Book> GetEnumerator(Filter filter);
     }
 }

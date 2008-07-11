@@ -11,6 +11,11 @@ namespace EBookMan
             this.bookId = -1;
         }
 
+        public BookFile(string path, Guid formatGuid, DateTime date) : this(path, formatGuid)
+        {
+            this.date = date;
+        }
+
         public string Path
         {
             get { return this.path; }
@@ -31,5 +36,6 @@ namespace EBookMan
         private string path;
         private Guid formatId;
         private Int32 bookId;
+        private DateTime date;
     }
 }
