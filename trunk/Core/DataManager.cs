@@ -15,8 +15,6 @@ namespace EBookMan
         /// </summary>
         private DataManager()
         {
-            this.appFolder = IOHelper.CompletePath(Application.StartupPath);
-
             this.plugins = new List<IPlugin>();
             this.providers = new List<IDataProvider>();
             this.formats = new List<IBookFormat>();
@@ -26,13 +24,15 @@ namespace EBookMan
 
             // load all dynamic objects from the root and plugin subfolder
 
-            LoadObjects(this.appFolder);
-            LoadObjects(this.appFolder + "plugins");
+            string appFolder = IOHelper.CompletePath(Application.StartupPath);
+
+            LoadObjects(appFolder);
+            LoadObjects(appFolder + "plugins");
 
 
             // select initiall the default library
 
-            this.currLibrary = this.libraries.Find(delegate(ILibrary lib) { return lib.Guid.Equals(this.defaultLibrary); });
+            this.currLibrary = this.libraries.Find(delegate(ILibrary lib) { return lib.Guid.Equals(DataManager.DefaultLibrary); });
         }
 
 
@@ -211,24 +211,48 @@ namespace EBookMan
                 return;
 
             Book book;
+            BookFile file;
+
+            // create book record from the file
 
             if ( progress != null ) progress.SetInterval(0, 50);
 
-            if ( provider.CreateBook(url, out book, progress) )
-            {
-                if ( progress != null )
-                {
-                    if ( progress.IsCancelled )
-                    {
-                        progress.Finish(null);
-                        return;
-                    }
+            if ( ! provider.CreateBook(url, out book, out file, progress) )
+                return;
 
-                    progress.SetInterval(50, 100);
+
+            // add book to the library
+
+            if ( progress != null )
+            {
+                if ( progress.IsCancelled )
+                {
+                    progress.Finish(null);
+                    return;
                 }
 
-                this.currLibrary.Add(book, progress);
+                progress.SetInterval(50, 70);
             }
+
+            if (book.IsValid && (! this.currLibrary.AddBook(book, progress)))
+                return;
+
+
+            // add files to the library
+
+            if (progress != null)
+            {
+                if ( progress.IsCancelled )
+                {
+                    progress.Finish(null);
+                    return;
+                }
+
+                progress.SetInterval(70, 100);
+            }
+
+            if ( file != null )
+                this.currLibrary.AddFiles(book, new BookFile[] { file }, progress);
         }
 
 
@@ -262,16 +286,7 @@ namespace EBookMan
         }
 
 
-        public Guid DefaultLibrary
-        {
-            get { return this.defaultLibrary; }
-        }
-
-
-        public string AppFolder
-        {
-            get { return this.appFolder; }
-        }
+        public static readonly Guid DefaultLibrary = new Guid("{B5ACDA8E-371B-4faa-95EB-9996EA5BB3D2}");
 
         #endregion
 
@@ -373,9 +388,6 @@ namespace EBookMan
 
         private Form mainWindow;
         private ILibrary currLibrary;
-
-        private readonly string appFolder;
-        private readonly Guid defaultLibrary = new Guid("{B5ACDA8E-371B-4faa-95EB-9996EA5BB3D2}");
 
         #endregion
     }

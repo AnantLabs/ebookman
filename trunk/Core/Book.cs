@@ -87,24 +87,16 @@ namespace EBookMan
         }
 
 
-        private Dictionary<string, object> tags;
+        private List<string> tags;
 
-        public void AddTag (string tag)
-        {
-            if ( this.tags == null ) 
-                this.tags = new Dictionary<string, object>();
-
-            this.tags.Add(tag, null);
-        }
-
-        public IEnumerable<string> Tags
+        public List<string> Tags
         {
             get
             {
                 if ( this.tags == null )
-                    this.tags = new Dictionary<string, object>();
+                    this.tags = new List<string>();
 
-                return this.tags.Keys;
+                return this.tags;
             }
         }
 
@@ -118,15 +110,6 @@ namespace EBookMan
         }
 
 
-        private BookFile[] files;
-
-        public BookFile[] Files
-        {
-            get { return this.files; }
-            set { this.files = value; }
-        }
-
-
         private string id;
 
         public string ID
@@ -136,9 +119,18 @@ namespace EBookMan
         }
 
 
-        public bool IsValid()
+        private float posiontion;
+
+        public float Position
         {
-            return string.IsNullOrEmpty(this.title) == false && string.IsNullOrEmpty(this.authors) == false; 
+            get { return this.posiontion; }
+            set { this.posiontion = value; }
+        }
+
+
+        public bool IsValid
+        {
+            get { return ( !string.IsNullOrEmpty(this.title) ) && ( !string.IsNullOrEmpty(this.authors) ); }
         }
     }
 }

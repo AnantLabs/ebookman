@@ -30,7 +30,16 @@ namespace EBookMan
             DataManager.Instance.MainWindow = this;
 
             DataManager.Instance.ActiveLibraryChange += new EventHandler(OnUpdateView);
-            OnUpdateView(this, EventArgs.Empty);
+
+
+            // select last know viewer
+
+            Guid lastViewer = Properties.Settings.Default.Viewer;
+
+            OnViewChanged(
+                DataManager.Instance.Viewers.Find(
+                    delegate(IViewer viewer) { return viewer.Guid.Equals(lastViewer); }),
+                EventArgs.Empty);
 
             base.OnLoad(e);
         }
@@ -57,13 +66,46 @@ namespace EBookMan
 
         #region UI event handlers
 
-        private void OnViewChanged (object sender, EventArgs args)
+        private void OnToolBarAddClicked(object sender, EventArgs e)
         {
-            ToolStripItem item = sender as ToolStripItem;
-            IViewer newViewer = (item == null)? null : item.Tag as IViewer;
 
-            if (newViewer == null)
-                return;
+        }
+
+        private void OnDeleteClicked(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OnViewClicked(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OnOptionsClicked(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OnReadClicked(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OnCopyClicked(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OnEditClicked(object sender, EventArgs e)
+        {
+
+        }
+
+        private void OnViewChanged(object sender, EventArgs args)
+        {            
+            ToolStripItem item = sender as ToolStripItem;
+            IViewer newViewer = (item == null)? (sender as IViewer) : (item.Tag as IViewer);
+            if (newViewer == null) return;
 
             this.SuspendLayout();
 
@@ -72,7 +114,7 @@ namespace EBookMan
 
             if (this.currViewer != null && this.currViewer.Control != null)
             {
-                this.currViewer.Control.Visible = false;
+                this.currViewer.Control.Hide();
                 this.currViewer.Clear();
             }
 
@@ -81,7 +123,7 @@ namespace EBookMan
 
             this.currViewer = newViewer;
             OnUpdateView(this, EventArgs.Empty);
-            this.currViewer.Control.Visible = true;
+            this.currViewer.Control.Show();
 
             this.ResumeLayout();
         }
@@ -148,6 +190,11 @@ namespace EBookMan
 
                     DataManager.Instance.AddBook(file, null, progress);
                 }
+
+                progress.Finish(
+                    ( filenames.Length > 1 )
+                    ? string.Format(Properties.Resources.PromptAddedFiles, filenames.Length)
+                    : null);
             };
 
 
@@ -167,6 +214,7 @@ namespace EBookMan
             // update filter with new languages and tags
 
             this.filterPanel.UpdateLanguageAndTags();
+            OnUpdateView(this, EventArgs.Empty);
         }
 
 
@@ -187,10 +235,11 @@ namespace EBookMan
 
                 if (viewer.Control != null)
                 {
-                    this.Controls.Add(viewer.Control);
                     viewer.Control.Dock = DockStyle.Fill;
-                    viewer.Control.Location = new Point (0, 0);
+                    viewer.Control.Location = new Point(0, 0);
+                    viewer.Control.Size = new Size(200, 200);
                     viewer.Control.Visible = false;
+                    this.viewPlaceHolder.Controls.Add(viewer.Control);
                 }
 
 
@@ -203,16 +252,6 @@ namespace EBookMan
 
                 this.btnView.DropDownItems.Add(item);
             }
-
-
-            // select last know viewer
-            
-            Guid lastViewer = Properties.Settings.Default.Viewer;
-
-            OnViewChanged(
-                DataManager.Instance.Viewers.Find(
-                    delegate(IViewer viewer) { return viewer.Guid.Equals(lastViewer); }), 
-                EventArgs.Empty);
         }
 
         

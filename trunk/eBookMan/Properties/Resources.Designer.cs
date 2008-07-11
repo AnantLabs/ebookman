@@ -60,6 +60,13 @@ namespace EBookMan.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap add {
+            get {
+                object obj = ResourceManager.GetObject("add", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to Close.
         /// </summary>
@@ -87,12 +94,49 @@ namespace EBookMan.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap copy {
+            get {
+                object obj = ResourceManager.GetObject("copy", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap delete {
+            get {
+                object obj = ResourceManager.GetObject("delete", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        internal static System.Drawing.Bitmap edit {
+            get {
+                object obj = ResourceManager.GetObject("edit", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         /// <summary>
         ///   Looks up a localized string similar to There were errors during the operation..
         /// </summary>
         internal static string ErrorsFound {
             get {
                 return ResourceManager.GetString("ErrorsFound", resourceCulture);
+            }
+        }
+        
+        internal static System.Drawing.Bitmap options {
+            get {
+                object obj = ResourceManager.GetObject("options", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to {0} files added..
+        /// </summary>
+        internal static string PromptAddedFiles {
+            get {
+                return ResourceManager.GetString("PromptAddedFiles", resourceCulture);
             }
         }
         
@@ -132,6 +176,13 @@ namespace EBookMan.Properties {
             }
         }
         
+        internal static System.Drawing.Bitmap read {
+            get {
+                object obj = ResourceManager.GetObject("read", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
+            }
+        }
+        
         internal static System.Drawing.Bitmap sternhalb {
             get {
                 object obj = ResourceManager.GetObject("sternhalb", resourceCulture);
@@ -152,6 +203,13 @@ namespace EBookMan.Properties {
         internal static string TitleAddingFiles {
             get {
                 return ResourceManager.GetString("TitleAddingFiles", resourceCulture);
+            }
+        }
+        
+        internal static System.Drawing.Bitmap view {
+            get {
+                object obj = ResourceManager.GetObject("view", resourceCulture);
+                return ((System.Drawing.Bitmap)(obj));
             }
         }
     }

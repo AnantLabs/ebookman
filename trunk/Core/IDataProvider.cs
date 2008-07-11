@@ -28,6 +28,6 @@ namespace EBookMan
 
         bool Update(Book book);
 
-        bool CreateBook(string url, out Book book, IAsyncProcessHost progress);
+        bool CreateBook(string url, out Book book, out BookFile file, IAsyncProcessHost progress);
     }
 }

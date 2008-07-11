@@ -247,7 +247,7 @@ namespace EBookMan
 
                     if ( string.Compare(node.Name, "genre", true) == 0 )
                     {
-                        book.AddTag(this.genres.ContainsKey(node.InnerText) ? this.genres[node.InnerText] : node.InnerText);
+                        book.Tags.Add(this.genres.ContainsKey(node.InnerText) ? this.genres[node.InnerText] : node.InnerText);
                         continue;
                     }
 
@@ -286,10 +286,6 @@ namespace EBookMan
                 if (isbn != null && isbn.Count == 1)
                     book.Isbn = isbn[0].InnerText;
 
-
-                // add files
-
-                book.Files = new BookFile[] { new BookFile(path, this.Guid) };
 
                 if ( progress != null ) progress.ReportProgress(100, null);
 
@@ -342,19 +338,13 @@ namespace EBookMan
 
         private string GetFullAuthorName(XmlNodeList nodes)
         {
-            string last = "", first = "", middle = "";
+            string last = "", first = "";
 
             foreach ( XmlNode node in nodes )
             {
                 if ( string.Compare(node.Name, "first-name", true) == 0 )
                 {
                     first = node.InnerText;
-                    continue;
-                }
-
-                if ( string.Compare(node.Name, "middle-name", true) == 0 )
-                {
-                    middle = node.InnerText;
                     continue;
                 }
 
@@ -365,7 +355,7 @@ namespace EBookMan
                 }
             }
 
-            return string.Format("{0} {1} {2}", last, first, middle).TrimEnd(' ');
+            return string.Format("{0} {1}", last, first).TrimEnd(' ');
         }
 
 

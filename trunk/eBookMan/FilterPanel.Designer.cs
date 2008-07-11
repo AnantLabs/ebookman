@@ -46,10 +46,10 @@ namespace EBookMan
             this.txtSearch = new System.Windows.Forms.TextBox();
             this.chkRating = new System.Windows.Forms.CheckBox();
             this.chkIncludeHigher = new System.Windows.Forms.CheckBox();
-            this.rating = new EBookMan.StarRating();
             this.cmbLanguage = new System.Windows.Forms.ComboBox();
             this.listTags = new System.Windows.Forms.CheckedListBox();
             this.btnReset = new System.Windows.Forms.Button();
+            this.rating = new EBookMan.StarRating();
             groupBox1 = new System.Windows.Forms.GroupBox();
             groupBox2 = new System.Windows.Forms.GroupBox();
             groupBox3 = new System.Windows.Forms.GroupBox();
@@ -181,18 +181,6 @@ namespace EBookMan
             groupBox3.TabStop = false;
             groupBox3.Text = "Language";
             // 
-            // rating
-            // 
-            this.rating.BackColor = System.Drawing.SystemColors.ButtonHighlight;
-            this.rating.ImageChecked = global::EBookMan.Properties.Resources.sternvoll;
-            this.rating.ImageEmpty = global::EBookMan.Properties.Resources.sternhalb;
-            this.rating.Location = new System.Drawing.Point(6, -54);
-            this.rating.MaximumStars = 5;
-            this.rating.Name = "rating";
-            this.rating.Size = new System.Drawing.Size(140, 24);
-            this.rating.Stars = 3;
-            this.rating.TabIndex = 0;
-            // 
             // cmbLanguage
             // 
             this.cmbLanguage.Anchor = ( ( System.Windows.Forms.AnchorStyles ) ( ( ( System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left )
@@ -244,6 +232,18 @@ namespace EBookMan
             this.btnReset.Text = "&Reset";
             this.btnReset.UseVisualStyleBackColor = true;
             this.btnReset.Click += new System.EventHandler(this.OnReset);
+            // 
+            // rating
+            // 
+            this.rating.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.rating.ImageChecked = global::EBookMan.Properties.Resources.sternvoll;
+            this.rating.ImageEmpty = global::EBookMan.Properties.Resources.sternhalb;
+            this.rating.Location = new System.Drawing.Point(6, -54);
+            this.rating.MaximumStars = 5;
+            this.rating.Name = "rating";
+            this.rating.Size = new System.Drawing.Size(140, 24);
+            this.rating.Stars = 3;
+            this.rating.TabIndex = 0;
             // 
             // FilterPanel
             // 

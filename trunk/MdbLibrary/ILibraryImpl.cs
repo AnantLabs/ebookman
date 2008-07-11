@@ -15,22 +15,19 @@ namespace EBookMan
 
         public Guid Guid
         {
-            get { return DataManager.Instance.DefaultLibrary; }
+            get { return DataManager.DefaultLibrary; }
         }
 
 
         public IEnumerator<Book> GetEnumerator(Filter filter)
         {
-            if (filter == null)
-                throw new NullReferenceException("filter");
-
-            return new MdbEnumerator(filter.GetSqlQuery(), this.connection);
+            return new MdbEnumerator((filter == null)? Filter.DefaultSqlQuery : filter.GetSqlQuery(), this.connection);
         }
         
 
-        public void Add(Book book, IAsyncProcessHost progress)
+        public bool AddBook(Book book, IAsyncProcessHost progress)
         {
-            if (book == null || ! book.IsValid())
+            if (book == null || ! book.IsValid)
                 throw new ArgumentException("Bad or invalid book");
 
 
@@ -42,17 +39,16 @@ namespace EBookMan
             if (bookId != -1)
             {
                 // TODO: handle update!!!
-                return;
+                return false;
             }
-
-
-            bool moveFiles = Properties.Settings.Default.MoveFiles;
-            string bookFolder = GetBookFolder(book);
 
 
             // save the cover page with the book file
 
-            if (progress != null) progress.ReportProgress(10, Properties.Resources.PromptAddingBook);
+            if (progress != null) progress.ReportProgress(20, Properties.Resources.PromptAddingBook);
+
+            bool move = Properties.Settings.Default.MoveFiles;
+            string bookFolder = (move)? GetBookFolder(book) : null;
 
             if (book.CoverImage != null )
             {
@@ -60,7 +56,12 @@ namespace EBookMan
                 // we need to save it either in the automatically generated folder
                 // if "MoveFiles" option is true or together with the file
 
-                book.CoverPath = IOHelper.GetUniqueFileName(bookFolder + "cover.png");
+                string filename = ( bookFolder == null )
+                    ? string.Format("{0}covers\\cover.png", Application.StartupPath)
+                    : string.Format("{0}cover.png", bookFolder);
+
+                book.CoverPath = IOHelper.GetUniqueFileName(filename);
+
                 try
                 {
                     book.CoverImage.Save(book.CoverPath, System.Drawing.Imaging.ImageFormat.Png);
@@ -68,6 +69,7 @@ namespace EBookMan
 
                 catch (IOException)
                 {
+                    Logger.Error("ADDBOOK: Saving cover failed {0}", book.CoverPath);
                     book.CoverPath = null; // drop cover
                 }
 
@@ -79,12 +81,12 @@ namespace EBookMan
                 // if the cover is specified by the path and the "MoveFiles" options is ON
                 // and the cover is located somewhere - move it to the designated book folder
 
-                if (moveFiles && ! string.IsNullOrEmpty(book.CoverPath))
+                if (move && ! string.IsNullOrEmpty(book.CoverPath))
                     book.CoverPath = MoveToFolder(false, bookFolder, book.CoverPath, progress);
             }
 
 
-            if ( progress != null ) progress.ReportProgress(20, null);
+            if ( progress != null ) progress.ReportProgress(50, null);
 
 
             // add book to the database
@@ -96,57 +98,20 @@ namespace EBookMan
                 book.SeriesNum, book.Rating, book.CoverPath,
                 NormalizeString(book.Annotation, 65553), NormalizeString(book.Isbn, 16), NormalizeString(book.Language, 16));
 
-            if (bookId == -1)
+            if ( bookId == -1 )
             {
                 if ( progress != null ) progress.ReportError(string.Format(Properties.Resources.ErrorAddingBookFailed, book.Title));
-                return;
+                return false;
             }
-
-
-            // force update available language list and tag list
-
-            this.tags = null;
-            this.languanges = null;
-
-
-            // add files to the database
-
-            bool compress = Properties.Settings.Default.CompressFiles;
-
-            if ( book.Files != null )
+            else
             {
-                int percent = 30;
-                int percent_inc = ( book.Files.Length > 0 ) ? 60 / book.Files.Length : 60;
-
-                for ( int i = 0 ; i < book.Files.Length ; i++ )
-                {
-                    if ( progress != null ) 
-                        progress.ReportProgress(percent, string.Format(Properties.Resources.PromptAddingFiles, book.Files[i].Path));
-
-                    percent += percent_inc;
-
-                    if ( moveFiles )
-                        book.Files[i].Path = MoveToFolder(compress, bookFolder, book.Files[ i ].Path, progress);
-
-                    book.Files[ i ].BookId = bookId;
-
-                    Int32 fileId = InsertRecord(
-                        "INSERT INTO Files(Path,FormatGuid,BookId,AddDate) VALUES('{0}','{1}',{2},Date())",
-                        NormalizeString(book.Files[ i ].Path, 255), 
-                        NormalizeString(book.Files[ i ].FormatId.ToString(), 36), 
-                        bookId);
-
-                    if (fileId == -1)
-                    {
-                        if ( progress != null ) progress.ReportError(string.Format(Properties.Resources.ErrorAddFileFailed, book.Files[i].Path));
-                    }
-                }
-            }   
+                book.ID = bookId.ToString();
+            }
 
 
             // add tags to the database
 
-            if ( progress != null ) progress.ReportProgress(95, Properties.Resources.PromptUpdatingTags);
+            if ( progress != null ) progress.ReportProgress(75, Properties.Resources.PromptUpdatingTags);
 
             if ( book.Tags != null )
             {
@@ -156,14 +121,65 @@ namespace EBookMan
                         continue;
 
                     Int32 tagId = GetTagId(tag); // will create if does not exist
-
-                    if ( tagId == -1 )
+                    if ( tagId == -1 ) 
                         continue;
 
-                    if (InsertRecord("INSERT INTO lkpBookTag(BookId, TagId) VALUES({0},{1})", bookId, tagId) == -1)
+                    if ( InsertRecord("INSERT INTO lkpBookTag(BookId, TagId) VALUES({0},{1})", bookId, tagId) == -1 )
                         if ( progress != null ) progress.ReportError(Properties.Resources.ErrorAddTagFailed);
                 }
             }
+
+
+            // update cached language list
+
+            if ( progress != null ) progress.ReportProgress(95, null);
+
+            if (! string.IsNullOrEmpty(book.Language))
+                if (this.languanges != null && this.languanges.IndexOf(book.Language) == -1)
+                    this.languanges.Add(book.Language);
+
+            return true;
+        }
+
+
+        public bool AddFiles(Book book, BookFile[] files, IAsyncProcessHost progress)
+        {
+            if ( book == null || files == null || string.IsNullOrEmpty(book.ID))
+                throw new ArgumentException();
+
+
+            // add files to the database
+
+            bool compress = Properties.Settings.Default.CompressFiles;
+            bool move = Properties.Settings.Default.MoveFiles;
+            string bookFolder = GetBookFolder(book);
+
+            int percent = 0;
+            int percent_inc = ( files.Length > 1 ) ? 100 / (files.Length - 1) : 100;
+
+            for ( int i = 0 ; i < files.Length ; i++ )
+            {
+                if ( progress != null )
+                    progress.ReportProgress(percent, string.Format(Properties.Resources.PromptAddingFiles, files[ i ].Path));
+
+                percent += percent_inc;
+
+                if ( move )
+                    files[ i ].Path = MoveToFolder(compress, bookFolder, files[ i ].Path, progress);
+
+                Int32 fileId = InsertRecord(
+                    "INSERT INTO Files(Path,FormatGuid,BookId,Added) VALUES('{0}','{1}',{2},Date())",
+                    NormalizeString(files[ i ].Path, 255),
+                    NormalizeString(files[ i ].FormatId.ToString(), 36),
+                    book.ID);
+
+                if ( fileId == -1 )
+                {
+                    if ( progress != null ) progress.ReportError(string.Format(Properties.Resources.ErrorAddFileFailed, files[ i ].Path));
+                }
+            }
+
+            return true;
         }
 
 
@@ -395,48 +411,42 @@ namespace EBookMan
 
         private string GetBookFolder(Book book)
         {
-            if ( book == null || !book.IsValid() )
-                return ".\\";
+            string author;
 
-            if ( Properties.Settings.Default.MoveFiles )
-            {
-                string author;
-
-                if ( string.IsNullOrEmpty(book.Authors) )
-                    author = Properties.Resources.UnknownAuthor;
-                else
-                {
-                    string[] a = book.Authors.Split(',');
-                    author = ( a == null || a.Length == 0 ) ? Properties.Resources.UnknownAuthor : IOHelper.Normalize(a[ 0 ].Trim());
-                }
-
-                return ( string.IsNullOrEmpty(book.SeriesName) )
-                    ? string.Format("{0}{1}\\{2}\\", Properties.Settings.Default.DbRoot, author, IOHelper.Normalize(book.Title))
-                    : string.Format("{0}{1}\\{2}\\{3}\\", Properties.Settings.Default.DbRoot, author, IOHelper.Normalize(book.SeriesName), IOHelper.Normalize(book.Title));
-            }
+            if ( string.IsNullOrEmpty(book.Authors) )
+                author = Properties.Resources.UnknownAuthor;
             else
             {
-                if ( book.Files != null && book.Files.Length > 0 && !string.IsNullOrEmpty(book.Files[ 0 ].Path) )
-                {
-                    return IOHelper.CompletePath(Path.GetDirectoryName(book.Files[ 0 ].Path));
-                }
-                else
-                {
-                    return ".\\";
-                }
+                string[] a = book.Authors.Split(',');
+                author = ( a == null || a.Length == 0 ) ? Properties.Resources.UnknownAuthor : IOHelper.Normalize(a[ 0 ].Trim());
             }
+
+            return ( string.IsNullOrEmpty(book.SeriesName) )
+                ? string.Format("{0}{1}\\{2}\\", 
+                        Properties.Settings.Default.DbRoot, 
+                        author, 
+                        IOHelper.Normalize(book.Title))
+                : string.Format("{0}{1}\\{2}\\{3:D2} {4}\\", 
+                        Properties.Settings.Default.DbRoot, 
+                        author, 
+                        IOHelper.Normalize(book.SeriesName), 
+                        book.SeriesNum,
+                        IOHelper.Normalize(book.Title));
         }
 
 
         private Int32 GetTagId(string tag)
         {
-            tag = NormalizeString(tag.ToUpper(), 50);
+            tag = NormalizeString(tag, 50);
 
             string format = "SELECT ID From Tags WHERE Name='{0}'";
 
             Int32 id = GetRecordID(format, tag);
             if ( id != -1 )
                 return id;
+
+            if (this.tags != null)
+                this.tags.Add(tag);
 
             return InsertRecord("INSERT INTO Tags(Name) VALUES('{0}')", NormalizeString(tag, 50));
         }
