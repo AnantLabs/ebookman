@@ -1,0 +1,1 @@
+Easy access ans search through the ebook collection stored on the local hard drive. Support for multiple text and audio formats. Retrieving book meta data from the Internet. Integration and support for multiple mobile reading devices.
